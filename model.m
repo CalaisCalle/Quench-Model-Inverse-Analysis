@@ -1,3 +1,4 @@
+%% Magnus' adjustments to model 
 clc
 clearvars
 close all

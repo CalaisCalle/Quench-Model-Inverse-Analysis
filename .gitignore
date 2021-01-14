@@ -10,3 +10,6 @@ Examples/fminsearchcon.m
 Examples/fminsearchbnd.m
 Examples/ex3_notes.pdf
 Benchmark_data.xlsx
+*.7z
+model.m
+params.mat
