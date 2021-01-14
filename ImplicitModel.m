@@ -84,6 +84,7 @@ while max(T(:)) > 1.1*T_inf
     Br_mat(:,:) = (eps*sb*dx) ./ k_mat; 
     
     %% Update Biot matrix using separated HTC's:
+    % Using one matrix to combine terms instead of separate side/top/bot
     %Edges:
     Bi_mat(1,2:n-1) = (dx * h_top) ./ k_mat(1,2:n-1);%top
     Bi_mat(n,2:n-1) = (dx * h_bot) ./ k_mat(n,2:n-1);%bottom
@@ -102,20 +103,20 @@ while max(T(:)) > 1.1*T_inf
     % EDGES:
         
     %TODO: Make this look cleaner
-    dt(2:n-1,1) = (CFL*dx^2) ./ (2*al_mat(2:n-1,1).*(2+Bi_mat(2:n-1,1)+2*Br_mat(2:n-1,1).*T(2:n-1,1).^3)); %left
-    dt(2:n-1,m) = CFL*(dx^2) ./ (2*al_mat(2:n-1,m).*(2+Bi_mat(2:n-1,m)+2*Br_mat(2:n-1,m).*T(2:n-1,m).^3)); %right
-    dt(1,2:m-1) = CFL*(dx^2) ./ (2*al_mat(1,2:n-1).*(2+Bi_mat(1,2:n-1)+2*Br_mat(1,2:m-1).*T(1,2:n-1).^3)); %top
-    dt(n,2:m-1) = CFL*(dx^2) ./ (2*al_mat(n,2:n-1).*(2+Bi_mat(n,2:n-1)+2*Br_mat(n,2:m-1).*T(n,2:n-1).^3)); %bot
+    dt(2:n-1,1) = (CFL*dx^2) ./ (2*al_mat(2:n-1,1).*(2+Bi_mat(2:n-1,1))); %left
+    dt(2:n-1,m) = CFL*(dx^2) ./ (2*al_mat(2:n-1,m).*(2+Bi_mat(2:n-1,m))); %right
+    dt(1,2:m-1) = CFL*(dx^2) ./ (2*al_mat(1,2:n-1).*(2+Bi_mat(1,2:n-1))); %top
+    dt(n,2:m-1) = CFL*(dx^2) ./ (2*al_mat(n,2:n-1).*(2+Bi_mat(n,2:n-1))); %bot
     
     % CORNERS:
     dt(1,1) = CFL*(dx^2) /...
-        ((2*al_mat(1,1)) * (2 + Bi_mat(1,1) + 2*Br_mat(1,1)*T(1,1)^3));
+        ((2*al_mat(1,1)) * (2 + Bi_mat(1,1)));
     dt(1,m) = CFL*(dx^2) /...
-        ((2*al_mat(1,m)) * (2 + Bi_mat(1,m) + 2*Br_mat(1,m)*T(1,m)^3));
+        ((2*al_mat(1,m)) * (2 + Bi_mat(1,m)));
     dt(n,1) = CFL*(dx^2) /...
-        ((2*al_mat(n,1)) * (2 + Bi_mat(n,1) + 2*Br_mat(n,1)*T(n,1)^3));
+        ((2*al_mat(n,1)) * (2 + Bi_mat(n,1)));
     dt(n,m) = CFL*(dx^2) /...
-        ((2*al_mat(n,m)) * (2 + Bi_mat(n,m) + 2*Br_mat(n,m)*T(n,m)^3));
+        ((2*al_mat(n,m)) * (2 + Bi_mat(n,m)));
     
     
     % INTERIOR:
@@ -131,17 +132,43 @@ while max(T(:)) > 1.1*T_inf
     
     % Edges
     for i = 2:n-1
-       b(1,i) = 2*Fo_mat(1,i) .* (Br_mat(1,i) * T_inf^3 + Bi_mat(1,i))*T_inf;  
-       b(n,i) = 2*Fo_mat(n,i) .* (Br_mat(n,i) * T_inf^3 + Bi_mat(n,i))*T_inf;  
-       b(i,1) = 2*Fo_mat(n,i) .* (Br_mat(n,i) * T_inf^3 + Bi_mat(n,i))*T_inf;  
-       b(i,n) = 2*Fo_mat(n,i) .* (Br_mat(n,i) * T_inf^3 + Bi_mat(n,i))*T_inf;  
+%        b(1,i) = 2*Fo_mat(1,i) .* (Br_mat(1,i) * T_inf^3 + Bi_mat(1,i))*T_inf;  
+%        b(n,i) = 2*Fo_mat(n,i) .* (Br_mat(n,i) * T_inf^3 + Bi_mat(n,i))*T_inf;  
+%        b(i,1) = 2*Fo_mat(n,i) .* (Br_mat(n,i) * T_inf^3 + Bi_mat(n,i))*T_inf;  
+%        b(i,n) = 2*Fo_mat(n,i) .* (Br_mat(n,i) * T_inf^3 + Bi_mat(n,i))*T_inf;  
+
+       b(1,i) = 2*Fo_mat(1,i).*Bi_mat(1,i)*T_inf +...
+           2*Fo_mat(1,i).*Br_mat(1,i)*(T_inf^4 -T(1,i)^4);  
+       
+       b(n,i) = 2*Fo_mat(n,i).*Bi_mat(n,i)*T_inf +...
+           2*Fo_mat(n,i).*Br_mat(n,i)*(T_inf^4 -T(n,i)^4);  
+       
+       
+       b(i,1) = 2*Fo_mat(i,1).*Bi_mat(i,1)*T_inf +...
+           2*Fo_mat(i,1).*Br_mat(i,1)*(T_inf^4 -T(i,1)^4);  
+       
+       b(i,n) = 2*Fo_mat(i,n).*Bi_mat(i,n)*T_inf +...
+           2*Fo_mat(i,n).*Br_mat(i,n)*(T_inf^4 -T(i,n)^4);
+       
     end
     
     %corners: 
-    b(1,1) = 2*Fo_mat(1,1) * (2*Br_mat(1,1) * T_inf^3 + Bi_mat(1,1)) * T_inf;
-    b(1,n) = 2*Fo_mat(1,n) * (2*Br_mat(1,n) * T_inf^3 + Bi_mat(1,n)) * T_inf;
-    b(n,1) = 2*Fo_mat(n,1) * (2*Br_mat(n,1) * T_inf^3 + Bi_mat(n,1)) * T_inf;
-    b(n,n) = 2*Fo_mat(n,n) * (2*Br_mat(n,n) * T_inf^3 + Bi_mat(n,n)) * T_inf;
+%     b(1,1) = 2*Fo_mat(1,1) * (2*Br_mat(1,1) * T_inf^3 + Bi_mat(1,1)) * T_inf;
+%     b(1,n) = 2*Fo_mat(1,n) * (2*Br_mat(1,n) * T_inf^3 + Bi_mat(1,n)) * T_inf;
+%     b(n,1) = 2*Fo_mat(n,1) * (2*Br_mat(n,1) * T_inf^3 + Bi_mat(n,1)) * T_inf;
+%     b(n,n) = 2*Fo_mat(n,n) * (2*Br_mat(n,n) * T_inf^3 + Bi_mat(n,n)) * T_inf;
+    
+    b(1,1) = 2*Fo_mat(1,1) * Bi_mat(1,1) * T_inf+...
+           4*Fo_mat(1,1).*Br_mat(1,1)*(T_inf^4 -T(1,1)^4);
+       
+    b(1,n) = 2*Fo_mat(1,n)*(Bi_mat(1,n))  * T_inf+...
+           4*Fo_mat(1,n).*Br_mat(1,n)*(T_inf^4 -T(1,n)^4);
+       
+    b(n,1) = 2*Fo_mat(n,1) *(Bi_mat(n,1))  * T_inf+...
+           4*Fo_mat(n,1).*Br_mat(n,1)*(T_inf^4 -T(n,1)^4);
+    
+    b(n,n) = 2*Fo_mat(n,n) *(Bi_mat(n,n))  * T_inf+...
+           4*Fo_mat(n,n).*Br_mat(n,n)*(T_inf^4 -T(n,n)^4);
     
     b(2:n-1,2:n-1) = 0; %remove old temperatures in interior
     b = b+T; % Each term in b has a Temperature term
@@ -161,7 +188,7 @@ while max(T(:)) > 1.1*T_inf
 
         crnr_part(1) = 2*T_new(2,1);
         crnr_part(2) = 2*T_new(1,2);
-        A_ii = 1+2*Fo_mat(1,1)*(2+Bi_mat(1,1)+2*Br_mat(1,1)*T_new(1,1)^3);
+        A_ii = 1+2*Fo_mat(1,1)*(2+Bi_mat(1,1));
         
         T_new(1,1) = (b(1,1) + Fo_mat(1,1) * sum(crnr_part)) / A_ii;
         
@@ -170,7 +197,7 @@ while max(T(:)) > 1.1*T_inf
             edge_part(1) = 2*T_new(2,j);
             edge_part(2) = T_new(1,j-1);
             edge_part(3) = T_new(1, j+1);
-            A_ii = 1+2*Fo_mat(1,j)*(2+Bi_mat(1,j)+Br_mat(1,j)*T_new(1,j)^3);
+            A_ii = 1+2*Fo_mat(1,j)*(2+Bi_mat(1,j));
             
             T_new(1,j) = (b(1,j) + Fo_mat(1,j) * sum(edge_part)) / A_ii;
         end
@@ -178,7 +205,7 @@ while max(T(:)) > 1.1*T_inf
         %top-right corner (1,m)
         crnr_part(1) = 2*T_new(2,m);
         crnr_part(2) = 2*T_new(1,m-1);
-        A_ii = 1+2*Fo_mat(1,m)*(2+Bi_mat(1,m)+2*Br_mat(1,m)*T_new(1,m)^3);
+        A_ii = 1+2*Fo_mat(1,m)*(2+Bi_mat(1,m));
         
         T_new(1,m) = (b(1,m) + Fo_mat(1,m) * sum(crnr_part)) / A_ii;
         
@@ -187,7 +214,7 @@ while max(T(:)) > 1.1*T_inf
             edge_part(1) = T_new(i+1,1);
             edge_part(2) = T_new(i-1,1);
             edge_part(3) = 2 * T_new(i, 2);
-            A_ii = 1+2*Fo_mat(i,1)*(2+Bi_mat(i,1)+Br_mat(i,1)*T_new(i,1)^3);
+            A_ii = 1+2*Fo_mat(i,1)*(2+Bi_mat(i,1));
             
             T_new(i,1) = (b(i,1) + Fo_mat(i,1) *sum(edge_part)) / A_ii;
         end
@@ -196,7 +223,7 @@ while max(T(:)) > 1.1*T_inf
             edge_part(1) = T_new(i+1,m);
             edge_part(2) = 2*T_new(i,m-1);
             edge_part(3) = T_new(i-1, m);
-            A_ii = 1+2*Fo_mat(i,m)*(2+Bi_mat(i,m)+Br_mat(i,m)*T_new(i,m)^3);
+            A_ii = 1+2*Fo_mat(i,m)*(2+Bi_mat(i,m));
             
             T_new(i,m) = (b(i,m) + Fo_mat(i,m) * sum(edge_part)) / A_ii;
         end
@@ -226,7 +253,7 @@ while max(T(:)) > 1.1*T_inf
         %bottom-left corner (n, 1)
         crnr_part(1) = 2*T_new(n-1,1);
         crnr_part(2) = 2*T_new(n,2);
-        A_ii = 1+2*Fo_mat(n,1)*(2+Bi_mat(n,1)+2*Br_mat(n,1)*T_new(n,1)^3);
+        A_ii = 1+2*Fo_mat(n,1)*(2+Bi_mat(n,1));
         
         T_new(n,1) = (b(n,1) + Fo_mat(n,1) * sum(crnr_part)) / A_ii;
 
@@ -235,7 +262,7 @@ while max(T(:)) > 1.1*T_inf
             edge_part(1) = T_new(n,j-1);
             edge_part(2) = 2* T_new(n-1,j);
             edge_part(3) = T_new(n, j+1);
-            A_ii = 1+2*Fo_mat(n,j)*(2+Bi_mat(n,j)+Br_mat(n,j)*T_new(n,j)^3);
+            A_ii = 1+2*Fo_mat(n,j)*(2+Bi_mat(n,j));
             
             T_new(n,j) = (b(n,j) + Fo_mat(n,j) * sum(edge_part)) / A_ii;
         end
@@ -243,7 +270,7 @@ while max(T(:)) > 1.1*T_inf
         %bottom-right corner (n,m)
         crnr_part(1) = 2*T_new(n-1,m);
         crnr_part(2) = 2*T_new(n,m-1);
-        A_ii = 1+2*Fo_mat(n,m)*(2+Bi_mat(n,m)+2*Br_mat(n,m)*T_new(n,m)^3);
+        A_ii = 1+2*Fo_mat(n,m)*(2+Bi_mat(n,m));
         
         T_new(n,m) = (b(n,m) + Fo_mat(n,m) * sum(crnr_part)) / A_ii;
         
