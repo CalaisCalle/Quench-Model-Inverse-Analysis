@@ -1,4 +1,4 @@
-function [t,data_out] = ImplicitModel(params)
+ function [t,data_out] = ImplicitModel(params)
 %IMPLICITSOLVER Quench simulation using the Gauss-Seidel method
 %   Simulates the temperature change
 
