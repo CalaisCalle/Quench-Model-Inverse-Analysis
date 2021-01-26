@@ -23,8 +23,8 @@ params.fname = 'Benchmark_data.txt';
 % Set HTCs
 hs = [50, 100, 20];
 % Range of n to benchmark over
-ns = [10,20,30,40,50];
-CFLs = [1, 0.75, 0.25, 0.1];
+ns = 10:10:100;
+CFLs = 1:-0.1:0.1;
 % array to save errors
 errors = zeros(length(ns),1);
 times = zeros(length(ns),1);
@@ -36,7 +36,7 @@ for i = 1:length(ns)
     %% get execution time and error
     tic
     errors(i) = ImplictObj(hs);
-   times(i) = toc;
+    times(i) = toc;
 end
 
 %% Plot n against time and error 
@@ -52,9 +52,9 @@ subplot(1,2,2)
 plot(ns, times, '-x')
 xlabel('n')
 ylabel('Execution Time [s]')
+saveas(gcf, 'n_error_time.pdf')
 
 %% Fixed n, change CFL
-%% loop through CFL's at fixed n
 % reset errors and set n
 errors = zeros(length(CFLs), 1);
 times = errors;
@@ -68,14 +68,19 @@ for i = 1:length(CFLs)
     times(i) = toc;
 end
 
+%% Plots for CFL study
+% error
 figure(2)
 subplot(1,2,1)
-plot(CFLs, times, '-x')
+plot(CFLs, errors*100, '-x')
 xlabel('CFL')
 ylabel('Error %')
 
+% Execution time
 figure(2)
 subplot(1,2,2)
-plot(CFLs, errors*100, '-x')
+plot(CFLs, times, '-x')
 xlabel('CFL')
 ylabel('Execution Time [s]')
+% Save plot 2
+saveas(gcf, 'cfl_error_time.pdf')

@@ -1,0 +1,3 @@
+Although I'm fairly certain the code has everything it needs to work in this zip file, I've included the outputted results just in case.
+ImplicitModel is the solver and ImplictObj is the objective function. I'm not a fan of the names (Implict is misspelled for example), 
+but didn't want to break things by changing them.

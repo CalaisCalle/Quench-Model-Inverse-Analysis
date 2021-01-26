@@ -1,20 +1,20 @@
 %% Set Material Parameters/Coefficients
-params.rho_As = [4430 0]; % Density
-params.k_As = [1.117 0.0174]; % 
-params.Cp_As = [546.31 0.219];
-params.eps = 0.279;
+params.rho_As = [4430 0]; % Density [Kg m^-3]
+params.k_As = [1.117 0.0174]; % Thermal conductivity [W m^-1 k^-1] 
+params.Cp_As = [546.31 0.219]; % Specific Heat Capacity [J K^-1 Kg^-1]
+params.eps = 0.279; % Emissivity
 
 params.fname = 'thermocouple_data.txt';
 %% Set material dimensions and quantisation
-params.L = 0.25;
-params.n = 20;
+params.L = 0.25; % length [m]
+params.n = 20; % Grid points on one edge (total is n^2)
 
 %% Initial Temperatures
-params.T0 = 960 + 273;
-params.T_inf = 293;
+params.T0 = 960 + 273; % Initial temperature [K]
+params.T_inf = 293; % Far-Field Temperature [K]
 
 %% Time and time step conditions
-params.CFL = 0.1;
+params.CFL = 0.1; % Courant-Friedrich-Lewy Constant
 params.time = 0;
 params.t_max = 18000;
 
@@ -24,7 +24,7 @@ params.ys = [0.5, 0.05, 0.05, 0.05, 0.5, 0.95, 0.95, 0.95, 0.5]*params.L; % Y Po
 save('params.mat', 'params');
 % hs = [50 100 20];
 
-%% Initial values of h
+%% Initial values of heat transfer coefficients [W m^-2]
 h0(1) = 30; % h_top
 h0(2) = 30; % h_side
 h0(3) = 30; % h_bot
@@ -66,12 +66,16 @@ data_temp = thermo_data.data(:,2:end);
 figure(1)
 for i = 1:n_cols
     subplot(3,3,i) % Have to set 3x3 subplots manually: could improve
-    plot(data_time, data_temp(i) -273, '-r') % plot in celcius
+    % plot data as solid red line
+    plot(model_time_f, model_data_f(:,i) - 273, 'kx', 'MarkerSize', 5);
     hold on
-    plot(model_time_f, model_data_f(:,i) - 273, 'kx')
+    % plot prediction as series of x
+    plot(data_time, data_temp(:,i) -273, '-r'); % plot in celsius
     hold off
     xlabel('Time [s]')
-    ylabel('Temperature [\circ]')
-    legend('data', 'prediction')
-    title(['Thermocouple a', num2str(i)]);
+    ylabel('Temperature [\circC]')
+    legend('Data', 'Sim')
+    title(['Position', num2str(i)]);
+
 end
+saveas(gcf, 'sim_model_comparison.pdf') % save the figure

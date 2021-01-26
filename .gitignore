@@ -14,3 +14,5 @@ Benchmark_data.xlsx
 model.m
 params.mat
 Graph/Data against time.fig
+*.pdf
+*.fig

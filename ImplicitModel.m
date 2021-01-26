@@ -1,6 +1,8 @@
  function [t,data_out] = ImplicitModel(params)
 %IMPLICITSOLVER Quench simulation using the Gauss-Seidel method
-%   Simulates the temperature change
+%   Simulates the temperature evolution of a material
+%   Assumes 3 temperature-independent heat transfer coefficients,
+%   unchanging far-field temperature, and a 2D plate.
 
 
 %% Things to do:
